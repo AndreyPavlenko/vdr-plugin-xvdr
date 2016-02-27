@@ -407,18 +407,14 @@ void cXVDRClient::StatusMessage(const char *Message) {
   QueueMessage(resp);
 }
 
-bool cXVDRClient::IsChannelWanted(cChannel* channel, int type)
+bool cXVDRClient::IsChannelWanted(cChannel* channel, bool radio)
 {
   // dismiss invalid channels
   if(channel == NULL)
     return false;
 
-  // radio
-  if((type == 1) && !IsRadio(channel))
-    return false;
-
-  // HD channels
-  if((type == 2) && (channel->Vtype() != 27))
+  // right type ?
+  if (radio != IsRadio(channel))
     return false;
 
   // skip channels witout SID
@@ -1017,7 +1013,7 @@ bool cXVDRClient::processCHANNELS_ChannelsCount() /* OPCODE 61 */
 
 bool cXVDRClient::processCHANNELS_GetChannels() /* OPCODE 63 */
 {
-  int type = m_req->get_U32();
+  bool radio = m_req->get_U32();
 
   m_channelCount = ChannelsCount();
 
@@ -1029,7 +1025,7 @@ bool cXVDRClient::processCHANNELS_GetChannels() /* OPCODE 63 */
 
   for (cChannel *channel = channels->First(); channel; channel = channels->Next(channel))
   {
-    if(!IsChannelWanted(channel, type))
+    if(!IsChannelWanted(channel, radio))
       continue;
 
     m_resp->put_U32(channel->Number());
